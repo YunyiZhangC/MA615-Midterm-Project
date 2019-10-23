@@ -1,0 +1,106 @@
+---
+title: "615 Midterm Project"
+author: "Yunyi Zhang"
+date: "21/10/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readxl)
+library(knitr)
+library(png)
+library(ggplot2)
+
+```
+
+## Data Set Overview
+
+This dataset compares most countries in the world in different aspects, such as GDP, energy use, and CO2 emission etc. Some data are missing, but the current data is sufficient enough for use to do some analysis. Personally I am interested in the comparison od CO2 emission and CO2 emission per capita, and I am going to explore this relationship in this project.
+
+
+
+## Load the data
+
+First load the data
+
+```{r,warning=FALSE,message=FALSE}
+Climate_data <- read_excel("C:\\Users\\wuyf\\Desktop\\MSSP\\615\\project\\World Bank Data\\climate_change_download_0.xls", sheet = 1)
+head(Climate_data)
+```
+
+## Data Cleaning Process
+
+I will first choose the section of data I want to look at, and then clean this part of the data
+
+The Six countries I choose are the top six with CO2 emission according to the United nation, and I am interested in comparing them in different aspects
+
+```{r, echo=FALSE}
+
+Filted_data <- filter(Climate_data, `Country name` %in%  c("China", "United States", "India", "Russian Federation", "Japan", "Germany" ))
+Filted_data <- select(Filted_data, -c(7:16))
+Filted_data <- na_if(Filted_data, "..")
+Filted_data <- filter(Filted_data, (rowMeans(is.na(Filted_data)) < 0.3))
+
+```
+
+## Explore The Data -- Comparing total CO2 emission
+
+```{r, echo=FALSE}
+CO2 <- filter(Filted_data, `Series name` %in% c('CO2 emissions, total (KtCO2)'))
+CO2 <- select(CO2, -c(1:6,16:18))
+CO2[nrow(CO2) + 1,] = c("2000","2001","2002","2003","2004","2005","2006","2007","2008")
+rownames(CO2) <- c("CHN", "Germany", "India", "Japan", "Russia", "USA", "year")
+
+
+CO2 = t(CO2)
+CO2 = as.data.frame(CO2)
+CO2$Japan <- as.numeric(as.character(CO2$Japan))
+CO2$CHN <- as.numeric(as.character(CO2$CHN))
+CO2$Germany <- as.numeric(as.character(CO2$Germany))
+CO2$USA <- as.numeric(as.character(CO2$USA))
+CO2$India <- as.numeric(as.character(CO2$India))
+CO2$year <- as.numeric(as.character(CO2$year))
+ggplot(CO2, aes(x = year)) +
+  geom_line(aes(y = Japan), color = "darkred") + 
+  geom_line(aes(y = CHN), color="steelblue", linetype="twodash") +
+  geom_line(aes(y = USA), color = "blue") + 
+  geom_line(aes(y = Germany), color="green", linetype="twodash") +
+  geom_line(aes(y = India), color = "black") +
+  ggtitle('Total CO2 Emission') +
+  ylab("Value (ktCO2)")
+
+```
+
+## Explore The Data -- Comparing CO2 emission per capita
+
+```{r, echo=FALSE}
+CO2p <- filter(Filted_data, `Series name` %in% c('CO2 emissions per capita (metric tons)'))
+CO2p <- select(CO2p, -c(1:6,16:18))
+CO2p[nrow(CO2p) + 1,] = c("2000","2001","2002","2003","2004","2005","2006","2007","2008")
+rownames(CO2p) <- c("CHN", "Germany", "India", "Japan", "Russia", "USA", "year")
+
+
+CO2p = t(CO2p)
+CO2p = as.data.frame(CO2p)
+CO2p$Japan <- as.numeric(as.character(CO2p$Japan))
+CO2p$CHN <- as.numeric(as.character(CO2p$CHN))
+CO2p$Germany <- as.numeric(as.character(CO2p$Germany))
+CO2p$USA <- as.numeric(as.character(CO2p$USA))
+CO2p$India <- as.numeric(as.character(CO2p$India))
+CO2p$year <- as.numeric(as.character(CO2p$year))
+ggplot(CO2p, aes(x = year)) +
+  geom_line(aes(y = Japan), color = "darkred") + 
+  geom_line(aes(y = CHN), color="steelblue", linetype="twodash") +
+  geom_line(aes(y = USA), color = "blue") + 
+  geom_line(aes(y = Germany), color="green", linetype="twodash") +
+  geom_line(aes(y = India), color = "black") +
+  ggtitle('CO2 Emission per capita') +
+  ylab("Value (tons)")
+```
+
+## Results
+
+From this two graphs we can see that the general trending of CO2 emmsion, both aggregate and per capita, does not fluctuate a lot from 2000 to 2008, except that China's emmision increased hugely since 2002. Although China is the largest carbon emission country, the USA ranks number one in per capita, and nearly twice as much as Japan, who is the second place.
